@@ -19,7 +19,7 @@ namespace lights {
 	public:
 		DirectionLight(glm::vec3 pos = glm::vec3(0.f), glm::vec3 pointsAt = glm::vec3(0.f), glm::vec3 color = glm::vec3(1.f), float multipler = 100.f, float ambientStr = 0.1f,
 			glm::vec3 ambientColor = glm::vec3(1.f), float specStr = 0.5f, float specPhong = 16.f);
-
+	
 	// Getters/Setters
 	public:
 		glm::vec3 getDirection();

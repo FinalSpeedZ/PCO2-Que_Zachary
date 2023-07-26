@@ -186,6 +186,10 @@ glm::vec3 Model::getRotation() {
 	return this->rotate;
 }
 
+void Model::setPosition(glm::vec3 pos) {
+	this->pos = pos;
+}
+
 void Model::setColor(glm::vec4 color) {
 	this->color = color;
 }

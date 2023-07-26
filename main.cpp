@@ -121,8 +121,6 @@ void Key_Callback(
     if (space)
         controllingMainObj = !controllingMainObj;
 
-
-
     // Main Obj
     if (controllingMainObj) {
         // Rotate along X axis
@@ -176,7 +174,7 @@ int main()
     Model objectModel = Model("3D/Object.obj", "3D/ObjectTexture.jpg", glm::vec3(0.f, -4.5f, 0.f), glm::vec3(7.f));
     // Light Source Model: https://www.cgtrader.com/items/3525927/download-page
     // Place Light Source Model -15 away from Main Object
-    Model lightModel = Model("3D/Light.obj", "", glm::vec3(0.f, 0.f, -15.f), glm::vec3(3.f), glm::vec3(0.f), glm::vec4(238.f/255.f, 228.f/255.f, 170.f/255.f, 1.f));
+    Model lightModel = Model("3D/Light.obj", "", glm::vec3(0.f, 0.f, -15.f), glm::vec3(5.f), glm::vec3(0.f), glm::vec4(238.f/255.f, 228.f/255.f, 170.f/255.f, 1.f));
 
     /* Load the vertex shader file into a string stream */
     std::fstream vertSrc("Shaders/sample.vert");
@@ -260,49 +258,6 @@ int main()
             );
         }
 
-        /* Lighting variables */
-        glm::vec3 cameraPos = camera->getPos();
-        /* Light variables */
-        glm::vec3 lightPos = glm::vec3(4, 11, -3);
-        glm::vec3 lightColor = glm::vec3(1, 1, 1);
-
-        /* Ambient variables */
-        // Ambient strength
-        float ambientStr = 0.1f;
-        // Ambient Color
-        glm::vec3 ambientColor = lightColor;
-
-        /* Specular variables */
-        // Spec strength
-        float specStr = 0.5f;
-        // Spec phong
-        float specPhong = 16;
-        // Light pos address
-        GLuint lightAddress = glGetUniformLocation(shaderProgram, "lightPos");
-        glUniform3fv(lightAddress, 1, glm::value_ptr(lightPos));
-        // Light Color 
-        GLuint lightColorAddress = glGetUniformLocation(shaderProgram, "lightColor");
-        glUniform3fv(lightColorAddress, 1, glm::value_ptr(lightColor));
-
-        /* Ambient variables */
-        // Ambient str address
-        GLuint ambientStrAddress = glGetUniformLocation(shaderProgram, "ambientStr");
-        glUniform1f(ambientStrAddress, ambientStr);
-        // Light Color 
-        GLuint ambientColorAddress = glGetUniformLocation(shaderProgram, "ambientColor");
-        glUniform3fv(lightColorAddress, 1, glm::value_ptr(lightColor));
-
-        /* Specular variables */
-        // Get the address of the camera pos from the shader
-        GLuint cameraPosAddress = glGetUniformLocation(shaderProgram, "cameraPos");
-        glUniform3fv(cameraPosAddress, 1, glm::value_ptr(cameraPos));
-        // Get the address of the spec str from the shader
-        GLuint specStrAddress = glGetUniformLocation(shaderProgram, "specStr");
-        glUniform1f(specStrAddress, specStr);
-        // Get the address of the spec phong from the shader
-        GLuint specPhongAddress = glGetUniformLocation(shaderProgram, "specPhong");
-        glUniform1f(specPhongAddress, specPhong);
-
         /* Draw Light Object */
         /* Update Light Object */
         // Light source not selected
@@ -319,6 +274,65 @@ int main()
         // Reset shader program color
         glUniform4fv(colorAddress, 1, glm::value_ptr(objectModel.getColor()));
 
+        /* Light Sources */
+        // Direction Light: Position is at 4, 11, -3; Points at 0, 0, 0
+        DirectionLight directionLight = DirectionLight(glm::vec3(4.f, 11.f, -3.f), glm::vec3(0.f), glm::vec3(1.f), 10.f);
+        // Point Light: Position is at position of lightModel; color is color of lightModel
+        PointLight pointLight = PointLight(lightModel.getPosition(), lightModel.getColor());
+
+        /* Lighting in Shader Program */
+        /* Direction Light */
+        // Exists
+        GLuint dl_existsAddress = glGetUniformLocation(shaderProgram, "dl_exists");
+        glUniform1f(dl_existsAddress, true);
+        // Direction
+        GLuint dl_directionAddress = glGetUniformLocation(shaderProgram, "dl_direction");
+        glUniform3fv(dl_directionAddress, 1, glm::value_ptr(directionLight.getDirection()));
+        // Color
+        GLuint dl_colorAddress = glGetUniformLocation(shaderProgram, "dl_color");
+        glUniform3fv(dl_colorAddress, 1, glm::value_ptr(directionLight.getColor()));
+        // Multiplier
+        GLuint dl_multiplierAddress = glGetUniformLocation(shaderProgram, "dl_multiplier");
+        glUniform1f(dl_multiplierAddress, directionLight.getMultiplier());
+        // AmbientStr
+        GLuint dl_ambientStrAddress = glGetUniformLocation(shaderProgram, "dl_ambientStr");
+        glUniform1f(dl_ambientStrAddress, directionLight.getAmbientStr());
+        // AmbientColor
+        GLuint dl_ambientColorAddress = glGetUniformLocation(shaderProgram, "dl_ambientColor");
+        glUniform3fv(dl_ambientColorAddress, 1, glm::value_ptr(directionLight.getAmbientColor()));
+        // SpecStr
+        GLuint dl_specStrAddress = glGetUniformLocation(shaderProgram, "dl_specStr");
+        glUniform1f(dl_specStrAddress, directionLight.getSpecStr());
+        // SpecPhong
+        GLuint dl_specPhongAddress = glGetUniformLocation(shaderProgram, "dl_specPhong");
+        glUniform1f(dl_specPhongAddress, directionLight.getSpecPhong());
+
+        /* Point Light */
+        // Exists
+        GLuint pl_existsAddress = glGetUniformLocation(shaderProgram, "pl_exists");
+        glUniform1f(pl_existsAddress, true);
+        // Pos
+        GLuint pl_posAddress = glGetUniformLocation(shaderProgram, "pl_pos");
+        glUniform3fv(pl_posAddress, 1, glm::value_ptr(pointLight.getPos()));
+        // Color
+        GLuint pl_colorAddress = glGetUniformLocation(shaderProgram, "pl_color");
+        glUniform3fv(pl_colorAddress, 1, glm::value_ptr(pointLight.getColor()));
+        // Multiplier
+        GLuint pl_multiplierAddress = glGetUniformLocation(shaderProgram, "pl_multiplier");
+        glUniform1f(pl_multiplierAddress, pointLight.getMultiplier());
+        // AmbientStr
+        GLuint pl_ambientStrAddress = glGetUniformLocation(shaderProgram, "pl_ambientStr");
+        glUniform1f(pl_ambientStrAddress, pointLight.getAmbientStr());
+        // AmbientColor
+        GLuint pl_ambientColorAddress = glGetUniformLocation(shaderProgram, "pl_ambientColor");
+        glUniform3fv(pl_ambientColorAddress, 1, glm::value_ptr(pointLight.getAmbientColor()));
+        // SpecStr
+        GLuint pl_specStrAddress = glGetUniformLocation(shaderProgram, "pl_specStr");
+        glUniform1f(pl_specStrAddress, pointLight.getSpecStr());
+        // SpecPhong
+        GLuint pl_specPhongAddress = glGetUniformLocation(shaderProgram, "pl_specPhong");
+        glUniform1f(pl_specPhongAddress, pointLight.getSpecPhong());
+
         /* Draw Main Object */
         /* Update Main Object */
         if (controllingMainObj)
@@ -330,8 +344,9 @@ int main()
         z_axis_mod = 0.f;
         objectModel.draw(&shaderProgram);
 
-        // Reset shader program lighting
-
+        // Reset lighting to render lightModel unaffected by light
+        glUniform1f(dl_existsAddress, false);
+        glUniform1f(pl_existsAddress, false);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

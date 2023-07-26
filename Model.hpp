@@ -28,6 +28,7 @@ namespace models {
 		glm::vec3 getPosition();
 		glm::vec3 getColor();
 		glm::vec3 getRotation();
+		void setPosition(glm::vec3 pos);
 		void setColor(glm::vec4 color);
 		void setRotation(glm::vec3 rotate);
 		
