@@ -28,6 +28,7 @@ namespace lights {
 
 	// Getters and Setters
 	public:
+		void setPos(glm::vec3 pos);
 		void setColor(glm::vec3 color);
 		void setMultiplier(float multiplier);
 		glm::vec3 getPos();

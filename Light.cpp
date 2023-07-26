@@ -16,6 +16,10 @@ void Light::setMultiplier(float multiplier) {
 	this->multiplier = multiplier;
 }
 
+void Light::setPos(glm::vec3 pos) {
+	this->pos = pos;
+}
+
 void Light::setColor(glm::vec3 color) {
 	this->color = color;
 }

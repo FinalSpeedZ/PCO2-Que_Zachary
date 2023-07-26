@@ -50,6 +50,12 @@ bool changeProjection = false;
 bool usePerspective = true;
 bool useOrtho = false;
 
+bool increasePointLightIntensity = false;
+bool decreasePointLightIntensity = false;
+bool increaseDirectionLightIntensity = false;
+bool decreaseDirectionLightIntensity = false;
+float intensity_mod = 0.f;
+
 /* Keyboard Input Function */
 void Key_Callback(
     GLFWwindow* window,
@@ -92,6 +98,18 @@ void Key_Callback(
         usePerspective = false;
         useOrtho = true;
     }
+    // arrow up
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+        increasePointLightIntensity = true;
+    // arrow down
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+        decreasePointLightIntensity = true;
+    // arrow left
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+        decreaseDirectionLightIntensity = true;
+    // arrow right
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+        increaseDirectionLightIntensity = true;
 
     /* Release */
      // W
@@ -115,6 +133,18 @@ void Key_Callback(
     // Space
     if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
         space = false;
+    // arrow up
+    if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
+        increasePointLightIntensity = false;
+    // arrow down
+    if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
+        decreasePointLightIntensity = false;
+    // arrow left
+    if (key == GLFW_KEY_LEFT && action == GLFW_RELEASE)
+        decreaseDirectionLightIntensity = false;
+    // arrow right
+    if (key == GLFW_KEY_RIGHT && action == GLFW_RELEASE)
+        increaseDirectionLightIntensity = false;
 
     /* Update */
     // Change controlled object
@@ -139,6 +169,17 @@ void Key_Callback(
         if (rotateNegZAxis)
             z_axis_mod -= speed * 10;
     }
+    // Controlling Light Source
+    else
+        if (increasePointLightIntensity) {
+            intensity_mod += speed / 100.f;
+            std::cout << "increase" << std::endl;
+        }
+        
+        if (decreasePointLightIntensity) {
+            intensity_mod -= speed / 100.f;
+            std::cout << "decrease" << std::endl;
+        }
 }
 
 int main()
@@ -174,7 +215,7 @@ int main()
     Model objectModel = Model("3D/Object.obj", "3D/ObjectTexture.jpg", glm::vec3(0.f, -4.5f, 0.f), glm::vec3(7.f));
     // Light Source Model: https://www.cgtrader.com/items/3525927/download-page
     // Place Light Source Model -15 away from Main Object
-    Model lightModel = Model("3D/Light.obj", "", glm::vec3(0.f, 0.f, -15.f), glm::vec3(5.f), glm::vec3(0.f), glm::vec4(238.f/255.f, 228.f/255.f, 170.f/255.f, 1.f));
+    Model lightModel = Model("3D/Light.obj", "", glm::vec3(10.f, 10.f, -15.f), glm::vec3(5.f), glm::vec3(0.f), glm::vec4(238.f/255.f, 228.f/255.f, 170.f/255.f, 1.f));
 
     /* Load the vertex shader file into a string stream */
     std::fstream vertSrc("Shaders/sample.vert");
@@ -218,6 +259,12 @@ int main()
     glLinkProgram(shaderProgram);
     // Use the shader program
     glUseProgram(shaderProgram);
+
+    /* Light Sources */
+    // Direction Light: Position is at 4, 11, -3; Points at 0, 0, 0
+    DirectionLight directionLight = DirectionLight(glm::vec3(4.f, 11.f, -3.f), glm::vec3(0.f), glm::vec3(1.f), 10.f);
+    // Point Light: Position is at position of lightModel; color is color of lightModel
+    PointLight pointLight = PointLight(lightModel.getPosition(), lightModel.getColor());
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -275,16 +322,17 @@ int main()
         glUniform4fv(colorAddress, 1, glm::value_ptr(objectModel.getColor()));
 
         /* Light Sources */
-        // Direction Light: Position is at 4, 11, -3; Points at 0, 0, 0
-        DirectionLight directionLight = DirectionLight(glm::vec3(4.f, 11.f, -3.f), glm::vec3(0.f), glm::vec3(1.f), 10.f);
-        // Point Light: Position is at position of lightModel; color is color of lightModel
-        PointLight pointLight = PointLight(lightModel.getPosition(), lightModel.getColor());
-
+        // Direction Light
+        directionLight.setMultiplier(directionLight.getMultiplier());
+        // Point Light
+        pointLight.setPos(lightModel.getPosition());
+        pointLight.setColor(lightModel.getColor());
+        
         /* Lighting in Shader Program */
         /* Direction Light */
         // Exists
         GLuint dl_existsAddress = glGetUniformLocation(shaderProgram, "dl_exists");
-        glUniform1f(dl_existsAddress, true);
+        glUniform1f(dl_existsAddress, false);
         // Direction
         GLuint dl_directionAddress = glGetUniformLocation(shaderProgram, "dl_direction");
         glUniform3fv(dl_directionAddress, 1, glm::value_ptr(directionLight.getDirection()));
@@ -332,6 +380,17 @@ int main()
         // SpecPhong
         GLuint pl_specPhongAddress = glGetUniformLocation(shaderProgram, "pl_specPhong");
         glUniform1f(pl_specPhongAddress, pointLight.getSpecPhong());
+
+        /* Update Point Light Intensity */
+        if (!controllingMainObj) {
+            if (increasePointLightIntensity) {
+                pointLight.setMultiplier(pointLight.getMultiplier() + abs(intensity_mod));
+            }
+            if (decreasePointLightIntensity) {
+                pointLight.setMultiplier(pointLight.getMultiplier() - abs(intensity_mod));
+                glUniform1f(pl_multiplierAddress, pointLight.getMultiplier());
+            }
+        }
 
         /* Draw Main Object */
         /* Update Main Object */
